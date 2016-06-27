@@ -83,7 +83,7 @@ int16_t Comms::receive(Registers* registers = NULL)
       if (snp.length() > 3)
       {
         ROS_WARN_STREAM_COND(!first_spin_,
-                             "Discarded " << 5 + snp.length() - 3 << " junk byte(s) preceeding packet.");
+          "Discarded " << 5 + snp.length() - 3 << " junk byte(s) preceeding packet.");
       }
       if (serial_->read(&type, 1) != 1) throw SerialTimeout();
       if (serial_->read(&address, 1) != 1) throw SerialTimeout();

@@ -111,14 +111,14 @@ void configureSensor(um6::Comms* sensor, ros::NodeHandle *private_nh)
   // set the broadcast rate of the device
   int rate;
   private_nh->param<int>("update_rate", rate, 20);
-  if (rate < 20 || rate > 300)
+  if (rate < 20 || rate > 255)
   {
     ROS_WARN("Potentially unsupported update rate of %d", rate);
   }
   // converting from desired rate to broadcast_rate as defined in UM6 datasheet
-  uint32_t rate_bits = (uint32_t) ((rate-20)*255.0/280.0);
+  uint32_t rate_bits = static_cast<uint32_t> ((rate-20)*255.0/280.0);
   ROS_INFO("Setting update rate to %uHz", rate);
-  comm_reg |= (rate_bits & UM6_SERIAL_RATE_MASK);
+  comm_reg |= (rate_bits & RATE2_ALL_RAW_START);
   r.communication.set(0, comm_reg);
   if (!sensor->sendWaitAck(r.communication))
   {
@@ -320,15 +320,16 @@ int main(int argc, char **argv)
   double linear_acceleration_stdev, angular_velocity_stdev;
   private_nh.param<std::string>("frame_id", imu_msg.header.frame_id, "imu_link");
   // Defaults obtained experimentally from hardware, no device spec exists
-  private_nh.param<double>("linear_acceleration_stdev", linear_acceleration_stdev, 0.06);
-  private_nh.param<double>("angular_velocity_stdev", angular_velocity_stdev, 0.005);
+  private_nh.param<double>("linear_acceleration_stdev", linear_acceleration_stdev, (4.0 * 1e-3 *  9.80665));
+  private_nh.param<double>("angular_velocity_stdev", angular_velocity_stdev, (0.06 * 3.14159 / 180.0));
+
 
   double linear_acceleration_cov = linear_acceleration_stdev * linear_acceleration_stdev;
   double angular_velocity_cov = angular_velocity_stdev * angular_velocity_stdev;
 
   // Enable converting from NED to ENU by default
   bool tf_ned_to_enu;
-  private_nh.param<bool>("tf_ned_to_enu", tf_ned_to_enu, true);
+  private_nh.param<bool>("tf_ned_to_enu", tf_ned_to_enu, false);
 
   // These values do not need to be converted
   imu_msg.linear_acceleration_covariance[0] = linear_acceleration_cov;
